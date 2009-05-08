@@ -1,0 +1,105 @@
+#!/bin/sh
+# Shell script for creating local git mirrors of drupal's cvs contrib repository
+# Assumes that you have:
+#   a) a cron'd rsync job that periodically pulls down drupal contrib via the provided rsyncd urls
+#   b) about 6G of hard drive space (as of this writing)
+#   c) a drupal cvs account. there isn't much point to this if you don't
+#   d) the right tools installed - cvs, cvsps, git, find, grep, sed. nothin fancy
+#
+# There are three ways to run this script:
+#   a) with 'all' as the only argument, in which case it will do all of contrib.
+#      doing all of contrib will probably take a couple hours the first time around,
+#      and 30-45 minutes once it's already done.
+#   b) with a space-delimited list of module names. it will do only those modules.
+#   c) with no arguments, in which case it will use the list of modules that are
+#      set in the 'MINE' variable, below.
+#
+# @author Sam Boyer (sdboyer, tech@samboyer.org)
+#
+# YOU SHOULDN'T NEED TO TOUCH ANYTHING IN THIS SCRIPT
+#
+
+# Include our configuration options.
+source /etc/drupal_sync.conf
+
+function syncItem() {
+  echo "Syncing directories for module, $1."
+  # Update or build our cache directory.
+  gitCVSSync $1
+  
+  # Update or build our frontend git repository.
+  updateGitRepo $1
+
+  echo "$MINE" | grep -q "$1" && updateBranches $1
+}
+
+function updateGitRepo() {
+  if [ -d $GITSRV/$1.git ]; then
+    echo " -> Updating git mirror."
+    git --git-dir=$GITSRV/$1.git fetch > /dev/null 2>&1
+  else
+    echo " * Building mirror of the cvsimport into a bare repo."
+    CLONE_COMMAND="git clone --mirror file://$GITSRV/.cvsimport/$1/ $GITSRV/$1.git"
+    $CLONE_COMMAND > /dev/null 2>&1
+  fi
+}
+
+function gitCVSSync() {
+  echo " -> Updating git storage from CVS."
+  #ensure directory
+  if [ ! -d $GITSRV/.cvsimport/$1 ]; then
+    mkdir -p $GITSRV/.cvsimport/$1
+  fi
+  IMPORT_COMMAND="git cvsimport -umak -p u -o master -C $GITSRV/.cvsimport/$1 -d$CVSSRV contributions/modules/$1"
+  $IMPORT_COMMAND # > /dev/null 2>&1
+}
+
+function updateBranches() {
+  echo " * Updating CVS commit checkouts."
+  for branch in `git --git-dir=$GITSRV/.cvsimport/$1/.git branch | sed 's/\ *//;s/*\ //'`; do
+    if [ ! -d $GITSRV/.cvsco/$1/$branch ]; then
+      newBranch $1 $branch
+    elif [[ $branch != "#CVSPS.NO.BRANCH" ]]; then
+      cd $GITSRV/.cvsco/$1/$branch/ 
+      cvs -d$CVSEXTERNAL up -dRP > /dev/null 2>&1
+      cd - > /dev/null
+    fi
+  done
+}
+
+function newBranch() {
+  echo " -> Checking out $2 branch of the $1 module directly from CVS (for git-cvsexportcommit)"
+  mkdir -p $GITSRV/.cvsco/$1/
+  CVS_COMMAND="cvs -d$CVSSRV co "
+  if [[ $2 != 'master' ]]; then
+    CVS_COMMAND="$CVS_COMMAND -r $2 "
+  else
+    CVS_COMMAND="$CVS_COMMAND -A "
+  fi
+  CVS_COMMAND="$CVS_COMMAND -d $GITSRV/.cvsco/$1/$2 contributions/modules/$1"
+  $CVS_COMMAND > /dev/null 2>&1
+
+  # Replace all the CVS Root files' pointers at my local rsync'd repo to cvs.d.o
+  find $GITSRV/.cvsco/$1/$2 -type f -name 'Root' -exec sed -i "s#$CVSSRV#$CVSEXTERNAL#" '{}' \;
+}
+
+if [[ $# > 0 ]]; then
+  if [[ $1 == 'all' ]]; then
+    list=`ls $CVSSRV/contributions/modules | grep -v Attic`
+  else
+    list=$*
+  fi
+else
+  list=$MINE
+fi
+
+for module in $list; do
+  if [ -d "$CVSSRV/contributions/modules/$module" ]; then
+    syncItem $module
+  else
+    echo "Missing $module $CVSSRV/contributions/modules/$module"
+  fi
+done
+
+# git cvsimport -umakp u -o master -C /var/git/drupal/drupal.git/.cvsimport -d $CVSSRV drupal > /dev/null 2>&1
+# git --git-dir=/var/git/drupal/drupal.git fetch > /dev/null 2>&1
