@@ -1,0 +1,26 @@
+#!/bin/sh
+g="$(git rev-parse --git-dir 2>/dev/null)" || exit 4 "** Must be called from within a git repository **"
+b=$(git-name-rev --name-only $1) || exit 5 "** Must provide a single, valid sha-1 commit id **"
+gitsrv='/srv/git/drupal/contrib'
+
+if [ "$g" == '.git' ]; then
+  m=`pwd | sed 's@/.*/@@'`
+else
+  m=`git rev-parse --git-dir | sed 's@/.*/\(.*\)/\.git@\1@'`
+fi
+
+function clean_up() {
+  cvs -d/srv/cvs/drupal up -C $gitsrv/.cvsco/$m/$b/ > /dev/null
+  rm $gitsrv/.cvsco/$m/$b/.msg $gitsrv/.cvsco/$m/$b/.cvsexportcommit.diff
+  find $gitsrv/.cvsc no/$m/$b -name '.#*' -exec rm '{}' \;
+  echo "** CVS commit failed. Cleaning up cvs directory... **"
+  exit 2
+}
+
+echo '** Exporting commit to CVS: **'
+git-cvsexportcommit -ucpw $gitsrv/.cvsco/$m/$b $1  || clean_up
+#drup-cvstogit $m
+echo '** Re-updating local git repos from CVS **'
+git cvsimport -umak -p u -o master -C $gitsrv/.cvsimport/$m -d :pserver:anonymous@cvs.drupal.org:/cvs/drupal-contrib contributions/modules/$m > /dev/null
+git --git-dir=$gitsrv/$m.git fetch
+git pull && git rebase origin/$b
