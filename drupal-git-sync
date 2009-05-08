@@ -52,6 +52,7 @@ function gitCVSSync() {
   fi
   IMPORT_COMMAND="git cvsimport -umak -p u -o master -C $GITSRV/.cvsimport/$1 -d$CVSSRV contributions/modules/$1"
   $IMPORT_COMMAND # > /dev/null 2>&1
+  git gc $GITSRV/.cvsimport/$1
 }
 
 function updateBranches() {
