@@ -37,6 +37,7 @@ function updateGitRepo() {
   if [ -d $GITSRV/$1.git ]; then
     echo " -> Updating git mirror."
     git --git-dir=$GITSRV/$1.git fetch > /dev/null 2>&1
+    git --git-dir=$GITSRV/$1.git gc > /dev/null 2>&1
   else
     echo " * Building mirror of the cvsimport into a bare repo."
     CLONE_COMMAND="git clone --mirror file://$GITSRV/.cvsimport/$1/ $GITSRV/$1.git"
@@ -51,8 +52,8 @@ function gitCVSSync() {
     mkdir -p $GITSRV/.cvsimport/$1
   fi
   IMPORT_COMMAND="git cvsimport -umak -p u -o master -C $GITSRV/.cvsimport/$1 -d$CVSSRV contributions/modules/$1"
-  $IMPORT_COMMAND # > /dev/null 2>&1
-  git gc $GITSRV/.cvsimport/$1
+  $IMPORT_COMMAND > /dev/null 2>&1
+  git --git-dir=$GITSRV/.cvsimport/$1/.git gc > /dev/null 2>&1
 }
 
 function updateBranches() {
