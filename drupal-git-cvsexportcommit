@@ -1,26 +1,40 @@
 #!/bin/sh
-g="$(git rev-parse --git-dir 2>/dev/null)" || exit 4 "** Must be called from within a git repository **"
-b=$(git-name-rev --name-only $1) || exit 5 "** Must provide a single, valid sha-1 commit id **"
-gitsrv='/srv/git/drupal/contrib'
+# TODO Someday support:
+# [--branch <branch name> | --calculate-branches] 
+#
 
-if [ "$g" == '.git' ]; then
-  m=`pwd | sed 's@/.*/@@'`
+# Make sure we where called correctly.
+CURRENT_GIT="$(git rev-parse --git-dir 2>/dev/null)" || exit 4 "** Must be called from within a git repository **"
+COMMIT_REF=$(git name-rev --name-only $1) || exit 5 "** Must provide a single, valid sha-1 commit id **"
+BRANCH=${COMMIT_REF/~[0-9]*/}
+
+# Include or general drupal sync config.
+source /etc/drupal_sync.conf
+
+# Figure out what our module name is.
+if [ "$CURRENT_GIT" == '.git' ]; then
+  MODULE=`pwd | sed 's@/.*/@@'`
 else
-  m=`git rev-parse --git-dir | sed 's@/.*/\(.*\)/\.git@\1@'`
+  # TODO I think this is broken
+  MODULE=`git rev-parse --git-dir | sed 's@/.*/\(.*\)/\.git@\1@'`
 fi
 
 function clean_up() {
-  cvs -d/srv/cvs/drupal up -C $gitsrv/.cvsco/$m/$b/ > /dev/null
-  rm $gitsrv/.cvsco/$m/$b/.msg $gitsrv/.cvsco/$m/$b/.cvsexportcommit.diff
-  find $gitsrv/.cvsc no/$m/$b -name '.#*' -exec rm '{}' \;
+  echo cleanup
+  exit
+  cvs -d/srv/cvs/drupal up -C $GITSRV/.cvsco/$MODULE/$BRANCH/ > /dev/null
+  rm $GITSRV/.cvsco/$MODULE/$BRANCH/.msg $GITSRV/.cvsco/$MODULE/$BRANCH/.cvsexportcommit.diff
+  find $GITSRV/.cvsc no/$MODULE/$BRANCH -name '.#*' -exec rm '{}' \;
   echo "** CVS commit failed. Cleaning up cvs directory... **"
   exit 2
 }
 
 echo '** Exporting commit to CVS: **'
-git-cvsexportcommit -ucpw $gitsrv/.cvsco/$m/$b $1  || clean_up
-#drup-cvstogit $m
+git cvsexportcommit -ucpw $GITSRV/.cvsco/$MODULE/$BRANCH $1  || clean_up
+
+#drup-cvstogit $MODULE
 echo '** Re-updating local git repos from CVS **'
-git cvsimport -umak -p u -o master -C $gitsrv/.cvsimport/$m -d :pserver:anonymous@cvs.drupal.org:/cvs/drupal-contrib contributions/modules/$m > /dev/null
-git --git-dir=$gitsrv/$m.git fetch
-git pull && git rebase origin/$b
+git cvsimport -umak -p u -o master -C $GITSRV/.cvsimport/$MODULE -d :pserver:anonymous@cvs.drupal.org:/cvs/drupal-contrib contributions/modules/$MODULE > /dev/null
+git --git-dir=$GITSRV/$MODULE.git fetch
+git pull && git rebase origin/$BRANCH
+
