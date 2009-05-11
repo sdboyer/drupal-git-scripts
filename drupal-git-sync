@@ -36,11 +36,11 @@ function syncItem() {
 function updateGitRepo() {
   if [ -d $GITSRV/$1.git ]; then
     echo " -> Updating git mirror."
-    git --git-dir=$GITSRV/$1.git fetch > /dev/null 2>&1
-    git --git-dir=$GITSRV/$1.git gc > /dev/null 2>&1
+    git --git-dir=$GITSRV/$MODULE_BASE/$1.git fetch > /dev/null 2>&1
+    git --git-dir=$GITSRV/$MODULE_BASE/$1.git gc > /dev/null 2>&1
   else
     echo " * Building mirror of the cvsimport into a bare repo."
-    CLONE_COMMAND="git clone --mirror file://$GITSRV/.cvsimport/$1/ $GITSRV/$1.git"
+    CLONE_COMMAND="git clone --mirror file://$GITSRV/$MODULE_BASE/.cvsimport/$1/ $GITSRV/$MODULE_BASE/$1.git"
     $CLONE_COMMAND > /dev/null 2>&1
   fi
 }
@@ -48,17 +48,17 @@ function updateGitRepo() {
 function gitCVSSync() {
   echo " -> Updating git storage from CVS."
   #ensure directory
-  if [ ! -d $GITSRV/.cvsimport/$1 ]; then
-    mkdir -p $GITSRV/.cvsimport/$1
+  if [ ! -d $GITSRV/$MODULE_BASE/.cvsimport/$1 ]; then
+    mkdir -p $GITSRV/$MODULE_BASE/.cvsimport/$1
   fi
-  IMPORT_COMMAND="git cvsimport -umak -p u -o master -C $GITSRV/.cvsimport/$1 -d$CVSSRV contributions/modules/$1"
+  IMPORT_COMMAND="git cvsimport -umak -p u -o master -C $GITSRV/$MODULE_BASE/.cvsimport/$1 -d$CVSSRV contributions/modules/$1"
   $IMPORT_COMMAND > /dev/null 2>&1
-  git --git-dir=$GITSRV/.cvsimport/$1/.git gc > /dev/null 2>&1
+  git --git-dir=$GITSRV/$MODULE_BASE/.cvsimport/$1/.git gc > /dev/null 2>&1
 }
 
 function updateBranches() {
   echo " * Updating CVS commit checkouts."
-  for branch in `git --git-dir=$GITSRV/.cvsimport/$1/.git branch | sed 's/\ *//;s/*\ //'`; do
+  for branch in `git --git-dir=$GITSRV/$MODULE_BASE/.cvsimport/$1/.git branch | sed 's/\ *//;s/*\ //'`; do
     if [ ! -d $GITSRV/.cvsco/$1/$branch ]; then
       newBranch $1 $branch
     elif [[ $branch != "#CVSPS.NO.BRANCH" ]]; then
@@ -71,18 +71,18 @@ function updateBranches() {
 
 function newBranch() {
   echo " -> Checking out $2 branch of the $1 module directly from CVS (for git-cvsexportcommit)"
-  mkdir -p $GITSRV/.cvsco/$1/
+  mkdir -p $GITSRV/$MODULE_BASE/.cvsco/$1/
   CVS_COMMAND="cvs -d$CVSSRV co "
   if [[ $2 != 'master' ]]; then
     CVS_COMMAND="$CVS_COMMAND -r $2 "
   else
     CVS_COMMAND="$CVS_COMMAND -A "
   fi
-  CVS_COMMAND="$CVS_COMMAND -d $GITSRV/.cvsco/$1/$2 contributions/modules/$1"
+  CVS_COMMAND="$CVS_COMMAND -d $GITSRV/$MODULE_BASE/.cvsco/$1/$2 contributions/modules/$1"
   $CVS_COMMAND > /dev/null 2>&1
 
   # Replace all the CVS Root files' pointers at my local rsync'd repo to cvs.d.o
-  find $GITSRV/.cvsco/$1/$2 -type f -name 'Root' -exec sed -i "s#$CVSSRV#$CVSEXTERNAL#" '{}' \;
+  find $GITSRV/$MODULE_BASE/.cvsco/$1/$2 -type f -name 'Root' -exec sed -i "s#$CVSSRV#$CVSEXTERNAL#" '{}' \;
 }
 
 if [[ $# > 0 ]]; then
@@ -97,11 +97,17 @@ fi
 
 for module in $list; do
   if [ -d "$CVSSRV/contributions/modules/$module" ]; then
+    MODULE_BASE="contrib"
     syncItem $module
   else
-    echo "Missing $module $CVSSRV/contributions/modules/$module"
+    if [ $module = 'core' ]; then
+      MODULE_BASE="drupal"
+      syncItem drupal
+#      git cvsimport -umakp u -o master -C /srv/git/drupal/drupal.git/.cvsimport -d $CVSSRV drupal #> /dev/null 2>&1
+#      git --git-dir=/srv/git/drupal/drupal.git fetch #> /dev/null 2>&1
+    else
+      echo "Missing $module $CVSSRV/contributions/modules/$module"
+    fi
   fi
 done
 
-# git cvsimport -umakp u -o master -C /var/git/drupal/drupal.git/.cvsimport -d $CVSSRV drupal > /dev/null 2>&1
-# git --git-dir=/var/git/drupal/drupal.git fetch > /dev/null 2>&1

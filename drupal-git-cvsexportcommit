@@ -20,19 +20,25 @@ else
 fi
 
 function clean_up() {
-  cvs -d/srv/cvs/drupal up -C $GITSRV/.cvsco/$MODULE/$BRANCH/ > /dev/null
-  rm $GITSRV/.cvsco/$MODULE/$BRANCH/.msg $GITSRV/.cvsco/$MODULE/$BRANCH/.cvsexportcommit.diff
-  find $GITSRV/.cvsc no/$MODULE/$BRANCH -name '.#*' -exec rm '{}' \;
+  cvs -d/srv/cvs/drupal up -C $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/ > /dev/null
+  rm $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/.msg $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/.cvsexportcommit.diff
+  find $GITSRV/$MODULE_BASE/.cvsc no/$MODULE/$BRANCH -name '.#*' -exec rm '{}' \;
   echo "** CVS commit failed. Cleaning up cvs directory... **"
   exit 2
 }
 
+if [ $MODULE = 'core' ]; then
+  MODULE_BASE="drupal"
+else
+  MODULE_BASE="contrib"
+fi
+
 echo '** Exporting commit to CVS: **'
-git cvsexportcommit -ucpw $GITSRV/.cvsco/$MODULE/$BRANCH $1  || clean_up
+git cvsexportcommit -ucpw $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH $1  || clean_up
 
 #drup-cvstogit $MODULE
 echo '** Re-updating local git repos from CVS **'
-git cvsimport -umak -p u -o master -C $GITSRV/.cvsimport/$MODULE -d :pserver:anonymous@cvs.drupal.org:/cvs/drupal-contrib contributions/modules/$MODULE > /dev/null
-git --git-dir=$GITSRV/$MODULE.git fetch
+git cvsimport -umak -p u -o master -C $GITSRV/$MODULE_BASE/.cvsimport/$MODULE -d :pserver:anonymous@cvs.drupal.org:/cvs/drupal-contrib contributions/modules/$MODULE > /dev/null
+git --git-dir=$GITSRV/$MODULE_BASE/$MODULE.git fetch
 git pull && git rebase origin/$BRANCH
 
