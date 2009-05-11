@@ -20,8 +20,6 @@ else
 fi
 
 function clean_up() {
-  echo cleanup
-  exit
   cvs -d/srv/cvs/drupal up -C $GITSRV/.cvsco/$MODULE/$BRANCH/ > /dev/null
   rm $GITSRV/.cvsco/$MODULE/$BRANCH/.msg $GITSRV/.cvsco/$MODULE/$BRANCH/.cvsexportcommit.diff
   find $GITSRV/.cvsc no/$MODULE/$BRANCH -name '.#*' -exec rm '{}' \;
