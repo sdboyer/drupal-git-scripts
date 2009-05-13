@@ -22,7 +22,7 @@ fi
 function clean_up() {
   cvs -d/srv/cvs/drupal up -C $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/ > /dev/null
   rm $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/.msg $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/.cvsexportcommit.diff
-  find $GITSRV/$MODULE_BASE/.cvsc no/$MODULE/$BRANCH -name '.#*' -exec rm '{}' \;
+  find $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH -name '.#*' -exec rm '{}' \;
   echo "** CVS commit failed. Cleaning up cvs directory... **"
   exit 2
 }
