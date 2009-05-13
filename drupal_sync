@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# An all in one script for updating your rsynced CVS repo and git mirrors.
+#
+# We pass all arguments passed to this script through to drupal-git-sync so you
+# can do some handy one liners.
+#
+# ie.
+# Update cvs repo and git mirrors of a couple specific modules.
+#   drupal_sync views panels
+# Update cvs repo and git mirrors of all modules.
+#   drupal_sync all
+# Update cvs repo and git mirrors for all modules in MINE. See drupal_sync.conf
+#   drupal_sync
+#
+# NOTE:
+# You must setup drupal-git-sync someone where in your PATH.
+#
+
+
+# Get our global sync options.
+source /etc/drupal_sync.conf
+if [ ! -d $CVSSRV ]; then
+  mkdir -p $CVSSRV || exit
+fi
+
+# Update our CVS repository.
+rsync -avz --delete cvs.drupal.org::cvsmirror-contrib/contributions $CVSSRV > /dev/null 2>&1
+rsync -avz --delete cvs.drupal.org::cvsmirror-core/drupal $CVSSRV > /dev/null 2>&1
+
+# Update git mirrors. We assume you have this in $PATH somewhere.
+drupal-git-sync $@
+
