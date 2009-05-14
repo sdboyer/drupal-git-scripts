@@ -88,6 +88,7 @@ function newBranch() {
 if [[ $# > 0 ]]; then
   if [[ $1 == 'all' ]]; then
     list=`ls $CVSSRV/contributions/modules | grep -v Attic`
+    list="$list core"
   else
     list=$*
   fi
