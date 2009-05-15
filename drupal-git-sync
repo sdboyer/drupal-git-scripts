@@ -34,7 +34,7 @@ function syncItem() {
 }
 
 function updateGitRepo() {
-  if [ -d $GITSRV/$1.git ]; then
+  if [ -d $GITSRV/$GIT_MODULE_BASE/$1.git ]; then
     echo " -> Updating git mirror."
     git --git-dir=$GITSRV/$GIT_MODULE_BASE/$1.git fetch > /dev/null 2>&1
     git --git-dir=$GITSRV/$GIT_MODULE_BASE/$1.git gc > /dev/null 2>&1
