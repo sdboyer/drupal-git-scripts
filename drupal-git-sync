@@ -87,16 +87,16 @@ function newBranch() {
 
 if [[ $# > 0 ]]; then
   if [[ $1 == 'all' ]]; then
-    list=`ls $CVSSRV/contributions/modules | grep -v Attic`
-    list="$list core"
+    LIST=`ls $CVSSRV/contributions/modules | grep -v Attic`
+    LIST="$LIST core"
   else
-    list=$*
+    LIST=$*
   fi
 else
-  list=$MINE
+  LIST=$MINE
 fi
 
-for module in $list; do
+for module in $LIST; do
   if [ -d "$CVSSRV/contributions/modules/$module" ]; then
     CVS_MODULE_BASE="contributions/modules/"
     GIT_MODULE_BASE="contrib"
