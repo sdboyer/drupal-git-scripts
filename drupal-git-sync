@@ -20,9 +20,9 @@
 #
 
 # Include our configuration options.
-source /etc/drupal_sync.conf
+. /etc/drupal_sync.conf
 
-function syncItem() {
+syncItem() {
   echo "Syncing directories for module, $1."
   # Update or build our cache directory.
   gitCVSSync $1
@@ -33,7 +33,7 @@ function syncItem() {
   echo "$MINE" | grep -q "$1" && updateBranches $1
 }
 
-function updateGitRepo() {
+updateGitRepo() {
   if [ -d $GITSRV/$GIT_MODULE_BASE/$1.git ]; then
     echo " -> Updating git mirror."
     git --git-dir=$GITSRV/$GIT_MODULE_BASE/$1.git fetch > /dev/null 2>&1
@@ -45,7 +45,7 @@ function updateGitRepo() {
   fi
 }
 
-function gitCVSSync() {
+gitCVSSync() {
   echo " -> Updating git storage from CVS."
   #ensure directory
   if [ ! -d $GITSRV/$GIT_MODULE_BASE/.cvsimport/$1 ]; then
@@ -56,12 +56,12 @@ function gitCVSSync() {
   git --git-dir=$GITSRV/$GIT_MODULE_BASE/.cvsimport/$1/.git gc > /dev/null 2>&1
 }
 
-function updateBranches() {
+updateBranches() {
   echo " * Updating CVS commit checkouts."
   for branch in `git --git-dir=$GITSRV/$GIT_MODULE_BASE/.cvsimport/$1/.git branch | sed 's/\ *//;s/*\ //'`; do
     if [ ! -d $GITSRV/.cvsco/$1/$branch ]; then
       newBranch $1 $branch
-    elif [[ $branch != "#CVSPS.NO.BRANCH" ]]; then
+    elif [ $branch != "#CVSPS.NO.BRANCH" ]; then
       cd $GITSRV/.cvsco/$1/$branch/ 
       cvs -d$CVSEXTERNAL up -dRP > /dev/null 2>&1
       cd - > /dev/null
@@ -69,11 +69,11 @@ function updateBranches() {
   done
 }
 
-function newBranch() {
+newBranch() {
   echo " -> Checking out $2 branch of the $1 module directly from CVS (for git-cvsexportcommit)"
   mkdir -p $GITSRV/$GIT_MODULE_BASE/.cvsco/$1/
   CVS_COMMAND="cvs -d$CVSSRV co "
-  if [[ $2 != 'master' ]]; then
+  if [ $2 != 'master' ]; then
     CVS_COMMAND="$CVS_COMMAND -r $2 "
   else
     CVS_COMMAND="$CVS_COMMAND -A "
@@ -85,8 +85,8 @@ function newBranch() {
   find $GITSRV/$GIT_MODULE_BASE/.cvsco/$1/$2 -type f -name 'Root' -exec sed -i "s#$CVSSRV#$CVSEXTERNAL#" '{}' \;
 }
 
-if [[ $# > 0 ]]; then
-  if [[ $1 == 'all' ]]; then
+if [ $# -gt 0 ]; then
+  if [ $1 = 'all' ]; then
     LIST=`ls $CVSSRV/contributions/modules | grep -v Attic`
     LIST="$LIST core"
   else

@@ -19,7 +19,7 @@
 
 
 # Get our global sync options.
-source /etc/drupal_sync.conf
+. /etc/drupal_sync.conf
 if [ ! -d $CVSSRV ]; then
   mkdir -p $CVSSRV || exit
 fi

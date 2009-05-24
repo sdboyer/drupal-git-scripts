@@ -9,7 +9,7 @@ COMMIT_REF=$(git name-rev --name-only $1) || exit 5 "** Must provide a single, v
 BRANCH=${COMMIT_REF/~[0-9]*/}
 
 # Include or general drupal sync config.
-source /etc/drupal_sync.conf
+. /etc/drupal_sync.conf
 
 # Figure out what our module name is.
 if [ "$CURRENT_GIT" == '.git' ]; then
@@ -19,7 +19,7 @@ else
   MODULE=`git rev-parse --git-dir | sed 's@/.*/\(.*\)/\.git@\1@'`
 fi
 
-function clean_up() {
+clean_up() {
   cvs -d/srv/cvs/drupal up -C $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/ > /dev/null
   rm $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/.msg $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH/.cvsexportcommit.diff
   find $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH -name '.#*' -exec rm '{}' \;
