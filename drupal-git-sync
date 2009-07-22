@@ -107,8 +107,6 @@ for module in $LIST; do
       CVS_MODULE_BASE=""
       GIT_MODULE_BASE="drupal"
       syncItem drupal
-#      git cvsimport -umakp u -o master -C /srv/git/drupal/drupal.git/.cvsimport -d $CVSSRV drupal #> /dev/null 2>&1
-#      git --git-dir=/srv/git/drupal/drupal.git fetch #> /dev/null 2>&1
     else
       echo "Missing $module $CVSSRV/contributions/modules/$module"
     fi
