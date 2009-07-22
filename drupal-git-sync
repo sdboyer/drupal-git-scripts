@@ -36,12 +36,12 @@ syncItem() {
 updateGitRepo() {
   if [ -d $GITSRV/$GIT_MODULE_BASE/$1.git ]; then
     echo " -> Updating git mirror."
-    git --git-dir=$GITSRV/$GIT_MODULE_BASE/$1.git fetch > /dev/null 2>&1
-    git --git-dir=$GITSRV/$GIT_MODULE_BASE/$1.git gc > /dev/null 2>&1
+    git --git-dir=$GITSRV/$GIT_MODULE_BASE/$1.git fetch > /dev/null
+    git --git-dir=$GITSRV/$GIT_MODULE_BASE/$1.git gc > /dev/null
   else
     echo " * Building mirror of the cvsimport into a bare repo."
     CLONE_COMMAND="git clone --mirror file://$GITSRV/$GIT_MODULE_BASE/.cvsimport/$1/ $GITSRV/$GIT_MODULE_BASE/$1.git"
-    $CLONE_COMMAND > /dev/null 2>&1
+    $CLONE_COMMAND > /dev/null
   fi
 }
 
@@ -52,8 +52,8 @@ gitCVSSync() {
     mkdir -p $GITSRV/$GIT_MODULE_BASE/.cvsimport/$1
   fi
   IMPORT_COMMAND="git cvsimport -umak -p u -o master -C $GITSRV/$GIT_MODULE_BASE/.cvsimport/$1 -d$CVSSRV ${CVS_MODULE_BASE}$1"
-  $IMPORT_COMMAND > /dev/null 2>&1
-  git --git-dir=$GITSRV/$GIT_MODULE_BASE/.cvsimport/$1/.git gc > /dev/null 2>&1
+  $IMPORT_COMMAND > /dev/null
+  git --git-dir=$GITSRV/$GIT_MODULE_BASE/.cvsimport/$1/.git gc > /dev/null
 }
 
 updateBranches() {
@@ -63,7 +63,7 @@ updateBranches() {
       newBranch $1 $branch
     elif [ $branch != "#CVSPS.NO.BRANCH" ]; then
       cd $GITSRV/.cvsco/$1/$branch/ 
-      cvs -d$CVSEXTERNAL up -dRP > /dev/null 2>&1
+      cvs -Q -d$CVSEXTERNAL up -dRP > /dev/null
       cd - > /dev/null
     fi
   done
@@ -79,7 +79,7 @@ newBranch() {
     CVS_COMMAND="$CVS_COMMAND -A "
   fi
   CVS_COMMAND="$CVS_COMMAND -d $GITSRV/$GIT_MODULE_BASE/.cvsco/$1/$2 ${CVS_MODULE_BASE}$1"
-  $CVS_COMMAND > /dev/null 2>&1
+  $CVS_COMMAND > /dev/null
 
   # Replace all the CVS Root files' pointers at my local rsync'd repo to cvs.d.o
   find $GITSRV/$GIT_MODULE_BASE/.cvsco/$1/$2 -type f -name 'Root' -exec sed -i "s#$CVSSRV#$CVSEXTERNAL#" '{}' \;
