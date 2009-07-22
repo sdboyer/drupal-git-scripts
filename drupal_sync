@@ -25,8 +25,26 @@ if [ ! -d $CVSSRV ]; then
 fi
 
 # Update our CVS repository.
-rsync -avz --delete cvs.drupal.org::cvsmirror-contrib/contributions $CVSSRV > /dev/null 2>&1
-rsync -avz --delete cvs.drupal.org::cvsmirror-core/drupal $CVSSRV > /dev/null 2>&1
+
+# We parse through our arguments and see which repositories we need to sync.
+CORE=0
+CONTRIB=0
+for module in $@
+do
+  if [ $module = "core" ] || [ $module = "all" ]; then
+    CORE=1
+  fi
+  if [ $module != "core" ]; then
+    CONTRIB=1
+  fi
+done
+
+if [ $CORE -ne 0 ]; then
+  rsync -avz --delete cvs.drupal.org::cvsmirror-core/drupal $CVSSRV # > /dev/null 2>&1
+fi
+if [ $CONTRIB -ne 0 ]; then
+  rsync -avz --delete cvs.drupal.org::cvsmirror-contrib/contributions $CVSSRV #> /dev/null 2>&1
+fi
 
 # Update git mirrors. We assume you have this in $PATH somewhere.
 drupal-git-sync $@
