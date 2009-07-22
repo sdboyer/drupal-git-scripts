@@ -70,6 +70,7 @@ updateBranches() {
 }
 
 newBranch() {
+  echo " * Setting up new branch"
   echo " -> Checking out $2 branch of the $1 module directly from CVS (for git-cvsexportcommit)"
   mkdir -p $GITSRV/$GIT_MODULE_BASE/.cvsco/$1/
   CVS_COMMAND="cvs -d$CVSSRV co "
