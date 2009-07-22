@@ -59,10 +59,10 @@ gitCVSSync() {
 updateBranches() {
   echo " * Updating CVS commit checkouts."
   for branch in `git --git-dir=$GITSRV/$GIT_MODULE_BASE/.cvsimport/$1/.git branch | sed 's/\ *//;s/*\ //'`; do
-    if [ ! -d $GITSRV/.cvsco/$1/$branch ]; then
+    if [ ! -d $GITSRV/$GIT_MODULE_BASE/.cvsco/$1/$branch ]; then
       newBranch $1 $branch
     elif [ $branch != "#CVSPS.NO.BRANCH" ]; then
-      cd $GITSRV/.cvsco/$1/$branch/ 
+      cd $GITSRV/$GIT_MODULE_BASE/.cvsco/$1/$branch/ 
       cvs -Q -d$CVSEXTERNAL up -dRP > /dev/null
       cd - > /dev/null
     fi
