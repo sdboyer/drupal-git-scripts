@@ -48,7 +48,7 @@ git cvsexportcommit -ucpw $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH $REF  || c
 
 #drup-cvstogit $MODULE
 echo '** Re-updating local git repos from CVS **'
-git cvsimport -umak -p u -o master -C $GITSRV/$MODULE_BASE/.cvsimport/$MODULE -d :pserver:anonymous@cvs.drupal.org:/cvs/drupal-contrib contributions/modules/$MODULE > /dev/null
+git cvsimport -umak -p u -o master -C $GITSRV/$MODULE_BASE/.cvsimport/$MODULE -d:pserver:anonymous@cvs.drupal.org:/cvs/drupal-contrib contributions/modules/$MODULE > /dev/null
 git --git-dir=$GITSRV/$MODULE_BASE/$MODULE.git fetch
 git pull && git rebase origin/$BRANCH
 
