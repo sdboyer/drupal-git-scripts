@@ -30,7 +30,7 @@ syncItem() {
   # Update or build our frontend git repository.
   updateGitRepo $1
 
-  echo "$MINE" | grep -q "$1" && updateBranches $1
+  echo " $MINE " | grep -q " $1 " && updateBranches $1
 }
 
 updateGitRepo() {
