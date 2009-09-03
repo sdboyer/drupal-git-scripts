@@ -3,9 +3,15 @@
 # [--branch <branch name> | --calculate-branches] 
 #
 
+if [ -z "$1" ]; then
+  REF="HEAD"
+else
+  REF=$1
+fi
+
 # Make sure we where called correctly.
 CURRENT_GIT="$(git rev-parse --git-dir 2>/dev/null)" || exit 4 "** Must be called from within a git repository **"
-COMMIT_REF=$(git name-rev --name-only $1) || exit 5 "** Must provide a single, valid sha-1 commit id **"
+COMMIT_REF=$(git name-rev --name-only $REF) || exit 5 "** Must provide a single, valid sha-1 commit id **"
 BRANCH=${COMMIT_REF/~[0-9]*/}
 
 # Include or general drupal sync config.
@@ -34,7 +40,7 @@ else
 fi
 
 echo '** Exporting commit to CVS: **'
-git cvsexportcommit -ucpw $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH $1  || clean_up
+git cvsexportcommit -ucpw $GITSRV/$MODULE_BASE/.cvsco/$MODULE/$BRANCH $REF  || clean_up
 
 #drup-cvstogit $MODULE
 echo '** Re-updating local git repos from CVS **'
