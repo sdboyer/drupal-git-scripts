@@ -14,6 +14,10 @@ CURRENT_GIT="$(git rev-parse --git-dir 2>/dev/null)" || exit 4 "** Must be calle
 COMMIT_REF=$(git name-rev --name-only $REF) || exit 5 "** Must provide a single, valid sha-1 commit id **"
 BRANCH=${COMMIT_REF/~[0-9]*/}
 
+if [ $BRANCH = "" ]; then
+  exit
+fi
+
 # Include or general drupal sync config.
 . /etc/drupal_sync.conf
 
