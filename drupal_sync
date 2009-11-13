@@ -18,6 +18,11 @@
 #
 
 
+# Check all dependent scripts/binaries are on the PATH somewhere
+for DEP in rsync cvs cvsps git find grep sed; do
+  which $DEP > /dev/null || exit 1 "Requirement $DEP is nowhere on the PATH"
+done
+
 # Get our global sync options.
 . /etc/drupal_sync.conf
 if [ ! -d $CVSSRV ]; then
