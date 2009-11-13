@@ -28,6 +28,12 @@ done
 if [ ! -d $CVSSRV ]; then
   mkdir -p $CVSSRV || exit
 fi
+if [ ! -d $CVSSRV/CVSROOT ]; then
+  cvs -d$CVSSRV init
+  chmod u+w $CVSSRV/CVSROOT/modules
+  echo "drupal drupal\ncontributions contributions" >> $CVSSRV/CVSROOT/modules
+  chmod u-w $CVSSRV/CVSROOT/modules
+fi
 
 # Update our CVS repository.
 
